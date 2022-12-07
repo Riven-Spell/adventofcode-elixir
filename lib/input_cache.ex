@@ -5,7 +5,7 @@ defmodule InputCache do
   `target` fields are expected to be `{year, day}` tuples.
   """
   def generateInput({year, day}, complexity) do
-    AdventOfCode.getDay({year, day}).generate(complexity)
+    AdventOfCode.getModule({year, day}).generate(complexity)
   end
 
   def downloadInput({year, day}) do

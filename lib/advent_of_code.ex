@@ -20,7 +20,7 @@ defmodule AdventOfCode do
     |> List.to_tuple()
   end
 
-  def getDay(target) do
+  def getModule(target) do
     {year, day} = target
 
     String.to_existing_atom("Elixir.AdventOfCode.Year#{year}.Day#{day}")
@@ -32,6 +32,10 @@ defmodule AdventOfCode do
       Atom.to_string(x)
       |> (&Regex.match?(~r/^Elixir\.AdventOfCode\.Year\d{4}\.Day\d{1,2}$/, &1)).()
     end)
+  end
+
+  def currentModule do
+    currentDay() |> getModule()
   end
 
   def currentDay do

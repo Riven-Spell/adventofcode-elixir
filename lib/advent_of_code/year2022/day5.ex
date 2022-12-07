@@ -9,7 +9,8 @@ defmodule AdventOfCode.Year2022.Day5 do
 
     parsed_stacks =
       stacks
-      |> Enum.map( # Break into
+      # Break into
+      |> Enum.map(
         &(Stream.unfold(&1, fn x -> String.split_at(x, 4) end)
           |> Enum.take_while(fn x -> x != "" end)
           |> Enum.map(fn x -> String.trim(x) |> String.trim("[") |> String.trim("]") end))
