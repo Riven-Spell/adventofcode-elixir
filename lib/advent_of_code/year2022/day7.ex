@@ -1,158 +1,77 @@
 defmodule AdventOfCode.Year2022.Day7 do
-  # Really add it all up, please.
-  defp trueCalculateSize(object) do
-    object
-    |> Enum.reduce({object, 0}, fn
-      {key, val}, {fs, total} when is_map(val) ->
-        {modified, size} = calculateSize(val)
-        {Map.put(fs, key, modified), total + size}
-
-      # file
-      {_, val}, {fs, total} ->
-        {fs, total + val}
-    end)
-    |> (fn {fs, total} -> {Map.put(fs, :cachedSize, total), total} end).()
-  end
-
-  # First, attempt to grab :cachedSize.
-  def calculateSize(object) do
-    case Map.fetch(object, :cachedSize) do
-      {:ok, size} -> {object, size}
-      :error -> trueCalculateSize(object)
+  # reduce the remaining sumstack down and apply it to sums
+  defp finalizeTraversal({_, sumStack, sums}) do
+    case sumStack do
+      # No-op sanity check
+      [] -> sums
+      # Add top level directory to sums
+      [a] -> [a] ++ sums
+      # recurse, yanking off & combining the sum
+      [a, b | tail] -> finalizeTraversal({nil, [a + b] ++ tail, [a] ++ sums})
     end
   end
 
-  # merge a new directory structure into the existing one, recursively
-  def mergeTrees(a, b) do
-    Map.merge(a, b, fn
-      _, m1, m2 when is_map(m1) and is_map(m2) ->
-        mergeTrees(m1, m2)
+  # using stacks, discover the full list of sums (since dirname is no longer needed)
+  def buildSizes_flat(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.reduce({[], [0], []}, fn line, {cwd, sumStack, sums} ->
+      case line do
+        # no-op
+        "$ ls" ->
+          {cwd, sumStack, sums}
 
-      # this should never happen
-      _, _, _ ->
-        raise "mergeTrees shouldn't have overlapping files."
+        # no-op
+        "$ cd /" ->
+          {cwd, sumStack, sums}
+
+        # drop the top sum & directory, combining into parent directory sum
+        "$ cd .." ->
+          [a, b | tail] = sumStack
+          {tl(cwd), [a + b] ++ tail, [a] ++ sums}
+
+        # add a new directory to the stack
+        "$ cd " <> segment ->
+          {[segment] ++ cwd, [0] ++ sumStack, sums}
+
+        # no-op; just ls outputting directory, effectively garbage
+        "dir" <> _ ->
+          {cwd, sumStack, sums}
+
+        # get file size & add it to current sum
+        file ->
+          [size, name] = String.split(file, " ", trim: true)
+          {size, _} = Integer.parse(size)
+
+          [sum | tail] = sumStack
+          {cwd, [sum + size] ++ tail, sums}
+      end
     end)
+    # drop any remaining traversal items
+    |> finalizeTraversal()
   end
 
-  # create the path as a real tree/directory structure
-  def createPath(path, size) do
-    path
-    |> String.split("/", trim: true)
-    |> Enum.reverse()
-    |> Enum.reduce(size, fn segment, acc ->
-      %{segment => acc}
-    end)
-  end
-
-  # append a new segment to a path
-  def appendPath(path, segment) do
-    case path do
-      "" -> segment
-      _ -> path <> "/" <> segment
-    end
-  end
-
-  # pop an element off the path
-  def popPath(path) do
-    case path do
-      "" ->
-        path
-
-      path ->
-        path
-        |> String.split("/", trim: true)
-        |> Enum.reverse()
-        |> tl
-        |> Enum.reverse()
-        |> Enum.join("/")
-    end
-  end
-
-  # construct the filesystem
-  def buildFS(input) do
-    {_, fs} =
-      input
-      |> String.split("\n", trim: true)
-      |> Enum.reduce({"", %{}}, fn line, {cwd, fs} ->
-        case line do
-          "$ ls" ->
-            {cwd, fs}
-
-          "$ cd .." ->
-            {popPath(cwd), fs}
-
-          "$ cd /" ->
-            {"", fs}
-
-          "$ cd " <> segment ->
-            {appendPath(cwd, segment), fs}
-
-          "dir " <> _ ->
-            {cwd, fs}
-
-          file ->
-            [size, name] = String.split(file, " ", trim: true)
-            {size, _} = Integer.parse(size)
-
-            {cwd, mergeTrees(fs, createPath(Path.join(cwd, name), size))}
-        end
-      end)
-
-    fs
-  end
-
-  # Sum all items below 100k size
-  def part1_sum(fs) do
-    fs
-    |> Enum.reduce(0, fn
-      {:cachedSize, size}, sum -> # Append the cached size if small enough
-        if size <= 100_000 do
-          sum + size
-        else
-          sum
-        end
-
-      {_, dir}, sum when is_map(dir) -> # Append any found sizes
-        sum + part1_sum(dir)
-
-      {_, _}, sum -> # Do not handle files.
-        sum
-    end)
-  end
-
+  # Find sum of sub-100k numbers
   def part1(input) do
-    {fs, _} = input |> buildFS() |> calculateSize()
-
-    part1_sum(fs)
+    input
+    |> buildSizes_flat()
+    |> Enum.filter(&(&1 <= 100_000))
+    |> Enum.sum()
   end
 
-  # Sort a list of all folder sizes
-  def part2_getSizes(fs) do
-    fs
-    |> Enum.reduce([], fn
-      {:cachedSize, n}, acc -> acc ++ [n] # Add cached size to list
-      {_, dir}, acc when is_map(dir) -> acc ++ part2_getSizes(dir) # Add all found sizes
-      {_, _}, acc -> acc # Ignore files
-    end)
-    |> Enum.sort(&>=/2)
-  end
-
-  # Recursively find the best item
-  def part2_findBest([item | tail], freeSpace) do
-	  if item + freeSpace < 30000000 do
-		  false
-	  else
-	    case part2_findBest(tail, freeSpace) do
-		    false -> item
-		    newAnswer -> newAnswer
-	    end
-	  end
-  end
-
+  # Find the smallest folder that would satisfy required storage
   def part2(input) do
-    {fs, totalSize} = input |> buildFS() |> calculateSize()
+    [fullSize | directories] =
+      input
+      |> buildSizes_flat()
+      |> Enum.sort(&>=/2)
 
-    part2_getSizes(fs) |> part2_findBest(70000000 - totalSize)
+    remaining = 70_000_000 - fullSize
+    needed = 30_000_000 - remaining
+
+    directories
+    |> Enum.reverse()
+    |> Enum.find(&(&1 >= needed))
   end
 
   # TODO: write generator
