@@ -38,6 +38,15 @@ defmodule AdventOfCode do
     currentDay() |> getModule()
   end
 
+  def currentInput do
+    {:ok, input} = currentDay() |> InputCache.getInputOrCreate()
+    input
+  end
+
+  def currentModuleAndInput do
+    {currentModule(), currentInput()}
+  end
+
   def currentDay do
     listDays()
     |> Enum.map(&getSolutionDate(&1))

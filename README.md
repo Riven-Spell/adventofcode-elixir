@@ -1,21 +1,7 @@
-# AdventOfCode
+# Advent of Code (Elixir)
 
-**TODO: Add description**
+Currently, all that lays in this repo is solutions, and a very unfinished framework for downloading/generating inputs, and running already written days.
 
-## Installation
+Working out of iex is simple. Specify your advent of code auth token in `AOC_SESSION` to download inputs. The `AdventOfCode` module provides for grappling around the project structure using the available functions to grab modules for different days, pull the module & input for the current day, etc.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `advent_of_code` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:advent_of_code, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/advent_of_code>.
-
+Input generation does not work whatsoever yet.
