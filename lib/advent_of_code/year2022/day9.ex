@@ -65,7 +65,7 @@ defmodule AdventOfCode.Year2022.Day9 do
     new_head = v2_add(head, move)
     new_tail = correct_tail_segments(new_head, tail)
 
-#    {new_head, new_tail} |> printString
+    #    {new_head, new_tail} |> printString
 
     performMove(
       {new_head, new_tail},
