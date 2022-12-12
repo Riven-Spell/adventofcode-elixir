@@ -1,4 +1,4 @@
-defmodule PriorityQueue do
+defmodule SortedList do
   # Defaults descending
   defstruct data: [], order: &>=/2, fixedLength: false
 
@@ -20,7 +20,7 @@ defmodule PriorityQueue do
     &<=/2
   end
 
-  def insert(%PriorityQueue{data: queue, order: order, fixedLength: fLen}, x) do
+  def insert(%SortedList{data: queue, order: order, fixedLength: fLen}, x) do
     {queue, order, fLen}
 
     {newQueue, item} =
@@ -38,7 +38,7 @@ defmodule PriorityQueue do
         end
       end)
 
-    %PriorityQueue{
+    %SortedList{
       data:
         if newQueue == [] do
           [x]
@@ -53,20 +53,20 @@ defmodule PriorityQueue do
   end
 
   defp handleRemainder(queue, remainder) do
-    %PriorityQueue{data: list} = queue
+    %SortedList{data: list} = queue
 
     if remainder != :noop do
-      %PriorityQueue{queue | data: list ++ [remainder]}
+      %SortedList{queue | data: list ++ [remainder]}
     else
       queue
     end
   end
 
   defp handleFixedLength(queue) do
-    %PriorityQueue{data: list, fixedLength: fLen} = queue
+    %SortedList{data: list, fixedLength: fLen} = queue
 
     if fLen != false do
-      %PriorityQueue{queue | data: Enum.take(list, fLen)}
+      %SortedList{queue | data: Enum.take(list, fLen)}
     else
       queue
     end
@@ -75,7 +75,7 @@ defmodule PriorityQueue do
   @doc """
   Extract the list from within.
   """
-  def getList(%PriorityQueue{data: data}) do
+  def getList(%SortedList{data: data}) do
     data
   end
 end

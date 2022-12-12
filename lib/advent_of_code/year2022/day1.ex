@@ -23,8 +23,8 @@ defmodule AdventOfCode.Year2022.Day1 do
   def part2(input) do
     input
     |> elves
-    |> Enum.reduce(%PriorityQueue{fixedLength: 3}, &PriorityQueue.insert(&2, &1))
-    |> PriorityQueue.getList()
+    |> Enum.reduce(%SortedList{fixedLength: 3}, &SortedList.insert(&2, &1))
+    |> SortedList.getList()
     |> Enum.sum()
   end
 

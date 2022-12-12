@@ -55,6 +55,11 @@ defmodule InputCache do
               generateInput(targetDay, complexity)
           end
 
+        if input ==
+             "Please don't repeatedly request this endpoint before it unlocks! The calendar countdown is synchronized with the server time; the link will be enabled on the calendar the instant this puzzle becomes available." do
+          {:error, input}
+        end
+
         storeInput(targetDay, input)
         {:ok, input}
     end
